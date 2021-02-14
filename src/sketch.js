@@ -1,7 +1,15 @@
 
 let width = 1000;
 let height = 1000;
-tiles = []
+let tiles = [];
+let font;
+let img;
+function preload() {
+
+  font = loadFont('resources/Inconsolata-ExtraLight.ttf');
+  img = loadImage('resources/spider.png');
+}
+
 function setup() {
   var canvasDiv = document.getElementById("sketchdiv");
   var cnv = createCanvas(width, height, WEBGL);
@@ -10,7 +18,14 @@ function setup() {
   setAttributes('antialias', true);
   fill(237, 34, 93);
   strokeWeight(3);
-  board = new Board(0, 0, 50);
+  //textureMode(NORMAL);
+
+
+
+
+
+
+  board = new Board(0, 0, 160);
   tiles.push(board.placeTile());
   tiles.push(board.placeTile("A"));
 
@@ -28,7 +43,7 @@ function draw() {
   camera(0, width / 2, height / 2, 0, 0, 0, 0, 1, 0);
 
   background(200);
-  for(tile of tiles){
+  for (tile of tiles) {
     board.drawTile(tile.x, tile.y)
   }
   // pan camera according to angle 'delta'
@@ -56,7 +71,7 @@ class Board {
     this.gridXPixels = .9 * width;
     this.gridYPixels = .9 * height;
     this.sepX = PI * hexSize;
-    this.sepY = Math.sqrt(3)/2 * hexSize;
+    this.sepY = Math.sqrt(3) / 2 * hexSize;
     this.gridX = (this.gridXPixels / this.sepX) + 1;
     this.gridY = (this.gridYPixels / this.sepY) + 1;
 
@@ -120,17 +135,25 @@ class Board {
     vertex(x + this.hexSize * sin(7 * PI / 6), y + this.hexSize * cos(7 * PI / 6), 0)
     vertex(x + this.hexSize * sin(5 * PI / 6), y + this.hexSize * cos(5 * PI / 6), 0)
     endShape(CLOSE)
-
+    push()
+    texture(img);
+    let s = this.hexSize/2
+    let apothem = Math.sqrt(3/2)*s
+    let d = s/2//Math.sqrt(Math.pow(s, 2) - Math.pow((Math.sqrt(3)*s)/2, 2))
+    
     beginShape()
-    vertex(x + this.hexSize * sin(PI / 2), y + this.hexSize * cos(PI / 2), 10)
-    vertex(x + this.hexSize * sin(PI / 6), y + this.hexSize * cos(PI / 6), 10)
-    vertex(x + this.hexSize * sin(11 * PI / 6), y + this.hexSize * cos(11 * PI / 6), 10)
-    vertex(x + this.hexSize * sin(3 * PI / 2), y + this.hexSize * cos(3 * PI / 2), 10)
-    vertex(x + this.hexSize * sin(7 * PI / 6), y + this.hexSize * cos(7 * PI / 6), 10)
-    vertex(x + this.hexSize * sin(5 * PI / 6), y + this.hexSize * cos(5 * PI / 6), 10)
-    vertex(x + this.hexSize * sin(PI / 2), y + this.hexSize * cos(PI / 2), 10)
-    endShape(CLOSE)
 
+    //right middle
+    vertex(x + this.hexSize * sin(PI / 2), y + this.hexSize * cos(PI / 2), 10,2*s, apothem)
+
+    vertex(x + this.hexSize * sin(PI / 6), y + this.hexSize * cos(PI / 6), 10, s+ d,2*apothem)
+    vertex(x + this.hexSize * sin(11 * PI / 6), y + this.hexSize * cos(11 * PI / 6), 10, d, 2*apothem)
+    //left middle
+    vertex(x + this.hexSize * sin(3 * PI / 2), y + this.hexSize * cos(3 * PI / 2), 10, 0, apothem)
+    vertex(x + this.hexSize * sin(7 * PI / 6), y + this.hexSize * cos(7 * PI / 6), 10, d, 0)
+    vertex(x + this.hexSize * sin(5 * PI / 6), y + this.hexSize * cos(5 * PI / 6), 10,d + s, 0)
+    endShape(CLOSE)
+    pop()
     beginShape()
     vertex(x + this.hexSize * sin(PI / 2), y + this.hexSize * cos(PI / 2), 0)
     vertex(x + this.hexSize * sin(PI / 2), y + this.hexSize * cos(PI / 2), 10)
