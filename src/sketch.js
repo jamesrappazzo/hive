@@ -1,28 +1,41 @@
-count = 0;
 
+let width = 1000;
+let height = 1000;
+tiles = []
+function setup() {
+  var canvasDiv = document.getElementById("sketchdiv");
+  var cnv = createCanvas(width, height, WEBGL);
+  angleMode
+  cnv.parent("sketchdiv");
+  setAttributes('antialias', true);
+  fill(237, 34, 93);
+  strokeWeight(3);
+  board = new Board(0, 0, 50);
+  tiles.push(board.placeTile());
+  tiles.push(board.placeTile("A"));
 
-async function setup() {
-  var board = new Board(1000, 1000, 50);
-  board.init();
-  board.placeTile();
-  await sleep(1000);
-  board.placeTile("A");
-  await sleep(1000);
-  board.placeTile("B");
-  await sleep(1000);
-  let id = board.placeTile("C");
-  await sleep(1000);
-  board.placeTile("D");
-  await sleep(1000);
-  board.placeTile("E");
-  await sleep(1000);
-  board.placeTile("F");
-  await sleep(1000);
-  let foundTile = board.activeTile.find(id)
+  tiles.push(board.placeTile("B"));
 
-  console.log(foundTile.x + ", " + foundTile.y)
+  tiles.push(board.placeTile("C"));
+
+  tiles.push(board.placeTile("D"));
+
+  tiles.push(board.placeTile("E"));
+
+  tiles.push(board.placeTile("F"));
 }
+function draw() {
+  camera(0, width / 2, height / 2, 0, 0, 0, 0, 1, 0);
 
+  background(200);
+  for(tile of tiles){
+    board.drawTile(tile.x, tile.y)
+  }
+  // pan camera according to angle 'delta'
+  //cam.tilt(delta);
+
+
+}
 function range(stop) {
   var a = [0], b = 0;
   while (b < stop) {
@@ -42,8 +55,8 @@ class Board {
     this.hexSize = hexSize;
     this.gridXPixels = .9 * width;
     this.gridYPixels = .9 * height;
-    this.sepX = 3 * hexSize;
-    this.sepY = .86 * hexSize;
+    this.sepX = PI * hexSize;
+    this.sepY = Math.sqrt(3)/2 * hexSize;
     this.gridX = (this.gridXPixels / this.sepX) + 1;
     this.gridY = (this.gridYPixels / this.sepY) + 1;
 
@@ -51,16 +64,6 @@ class Board {
     this.activeTile = null;
   }
 
-  init() {
-    var canvasDiv = document.getElementById("sketchdiv");
-    var cnv = createCanvas(this.width, this.height);
-    cnv.parent("sketchdiv");
-    background(255);
-    stroke(0)
-    strokeWeight(2);
-    noFill()
-    textSize(16)
-  }
 
   placeTile(edge = null) {
     var tile;
@@ -68,17 +71,15 @@ class Board {
       var tile = new Tile(this.width / 2, this.height / 2);
       this.startTile = tile;
       this.activeTile = tile;
-      this.drawTile(this.activeTile.x, this.activeTile.y)
     } else if (this.isIllegalStartState(edge)) {
       throw new Error("Edge can only be null if startTile not set.")
     } else {
       let [x, y] = this.getEdgeCoords(edge);
       var tile = new Tile(x, y);
       this.activeTile.addAdjacency(edge, tile)
-      this.drawTile(x, y)
     }
-    text(tile.id.substring(0,3), tile.x,tile.y)
-    return tile.id;
+    //text(tile.id.substring(0,3), tile.x,tile.y)
+    return tile;
   }
 
   setActiveTile(x, y) {
@@ -112,12 +113,78 @@ class Board {
 
   drawTile(x, y) {
     beginShape()
-    vertex(x + this.hexSize * sin(PI / 2), y + this.hexSize * cos(PI / 2))
-    vertex(x + this.hexSize * sin(PI / 6), y + this.hexSize * cos(PI / 6))
-    vertex(x + this.hexSize * sin(11 * PI / 6), y + this.hexSize * cos(11 * PI / 6))
-    vertex(x + this.hexSize * sin(3 * PI / 2), y + this.hexSize * cos(3 * PI / 2))
-    vertex(x + this.hexSize * sin(7 * PI / 6), y + this.hexSize * cos(7 * PI / 6))
-    vertex(x + this.hexSize * sin(5 * PI / 6), y + this.hexSize * cos(5 * PI / 6))
+    vertex(x + this.hexSize * sin(PI / 2), y + this.hexSize * cos(PI / 2), 0)
+    vertex(x + this.hexSize * sin(PI / 6), y + this.hexSize * cos(PI / 6), 0)
+    vertex(x + this.hexSize * sin(11 * PI / 6), y + this.hexSize * cos(11 * PI / 6), 0)
+    vertex(x + this.hexSize * sin(3 * PI / 2), y + this.hexSize * cos(3 * PI / 2), 0)
+    vertex(x + this.hexSize * sin(7 * PI / 6), y + this.hexSize * cos(7 * PI / 6), 0)
+    vertex(x + this.hexSize * sin(5 * PI / 6), y + this.hexSize * cos(5 * PI / 6), 0)
+    endShape(CLOSE)
+
+    beginShape()
+    vertex(x + this.hexSize * sin(PI / 2), y + this.hexSize * cos(PI / 2), 10)
+    vertex(x + this.hexSize * sin(PI / 6), y + this.hexSize * cos(PI / 6), 10)
+    vertex(x + this.hexSize * sin(11 * PI / 6), y + this.hexSize * cos(11 * PI / 6), 10)
+    vertex(x + this.hexSize * sin(3 * PI / 2), y + this.hexSize * cos(3 * PI / 2), 10)
+    vertex(x + this.hexSize * sin(7 * PI / 6), y + this.hexSize * cos(7 * PI / 6), 10)
+    vertex(x + this.hexSize * sin(5 * PI / 6), y + this.hexSize * cos(5 * PI / 6), 10)
+    vertex(x + this.hexSize * sin(PI / 2), y + this.hexSize * cos(PI / 2), 10)
+    endShape(CLOSE)
+
+    beginShape()
+    vertex(x + this.hexSize * sin(PI / 2), y + this.hexSize * cos(PI / 2), 0)
+    vertex(x + this.hexSize * sin(PI / 2), y + this.hexSize * cos(PI / 2), 10)
+    vertex(x + this.hexSize * sin(PI / 6), y + this.hexSize * cos(PI / 6), 10)
+    vertex(x + this.hexSize * sin(PI / 6), y + this.hexSize * cos(PI / 6), 0)
+    endShape(CLOSE)
+
+    beginShape()
+    vertex(x + this.hexSize * sin(PI / 6), y + this.hexSize * cos(PI / 6), 0)
+    vertex(x + this.hexSize * sin(PI / 6), y + this.hexSize * cos(PI / 6), 10)
+    vertex(x + this.hexSize * sin(11 * PI / 6), y + this.hexSize * cos(11 * PI / 6), 10)
+    vertex(x + this.hexSize * sin(11 * PI / 6), y + this.hexSize * cos(11 * PI / 6), 0)
+    endShape(CLOSE)
+
+    beginShape()
+    vertex(x + this.hexSize * sin(11 * PI / 6), y + this.hexSize * cos(11 * PI / 6), 0)
+    vertex(x + this.hexSize * sin(11 * PI / 6), y + this.hexSize * cos(11 * PI / 6), 10)
+    vertex(x + this.hexSize * sin(3 * PI / 2), y + this.hexSize * cos(3 * PI / 2), 10)
+    vertex(x + this.hexSize * sin(3 * PI / 2), y + this.hexSize * cos(3 * PI / 2), 0)
+    endShape(CLOSE)
+
+    beginShape()
+    vertex(x + this.hexSize * sin(3 * PI / 2), y + this.hexSize * cos(3 * PI / 2), 0)
+    vertex(x + this.hexSize * sin(3 * PI / 2), y + this.hexSize * cos(3 * PI / 2), 10)
+    vertex(x + this.hexSize * sin(7 * PI / 6), y + this.hexSize * cos(7 * PI / 6), 10)
+    vertex(x + this.hexSize * sin(7 * PI / 6), y + this.hexSize * cos(7 * PI / 6), 0)
+    endShape(CLOSE)
+
+    beginShape()
+    vertex(x + this.hexSize * sin(7 * PI / 6), y + this.hexSize * cos(7 * PI / 6), 0)
+    vertex(x + this.hexSize * sin(7 * PI / 6), y + this.hexSize * cos(7 * PI / 6), 10)
+    vertex(x + this.hexSize * sin(5 * PI / 6), y + this.hexSize * cos(5 * PI / 6), 10)
+    vertex(x + this.hexSize * sin(5 * PI / 6), y + this.hexSize * cos(5 * PI / 6), 0)
+    endShape(CLOSE)
+
+    beginShape()
+    vertex(x + this.hexSize * sin(5 * PI / 6), y + this.hexSize * cos(5 * PI / 6), 0)
+    vertex(x + this.hexSize * sin(5 * PI / 6), y + this.hexSize * cos(5 * PI / 6), 10)
+    vertex(x + this.hexSize * sin(7 * PI / 6), y + this.hexSize * cos(7 * PI / 6), 10)
+    vertex(x + this.hexSize * sin(7 * PI / 6), y + this.hexSize * cos(7 * PI / 6), 0)
+    endShape(CLOSE)
+
+    beginShape()
+    vertex(x + this.hexSize * sin(7 * PI / 6), y + this.hexSize * cos(7 * PI / 6), 0)
+    vertex(x + this.hexSize * sin(7 * PI / 6), y + this.hexSize * cos(7 * PI / 6), 10)
+    vertex(x + this.hexSize * sin(5 * PI / 6), y + this.hexSize * cos(5 * PI / 6), 10)
+    vertex(x + this.hexSize * sin(5 * PI / 6), y + this.hexSize * cos(5 * PI / 6), 0)
+    endShape(CLOSE)
+
+    beginShape()
+    vertex(x + this.hexSize * sin(5 * PI / 6), y + this.hexSize * cos(5 * PI / 6), 0)
+    vertex(x + this.hexSize * sin(5 * PI / 6), y + this.hexSize * cos(5 * PI / 6), 10)
+    vertex(x + this.hexSize * sin(PI / 2), y + this.hexSize * cos(PI / 2), 10)
+    vertex(x + this.hexSize * sin(PI / 2), y + this.hexSize * cos(PI / 2), 0)
     endShape(CLOSE)
   }
   getACoords(x, y) {
