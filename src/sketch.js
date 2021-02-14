@@ -3,7 +3,12 @@ let width = 1000;
 let height = 1000;
 let tiles = [];
 let font;
-let img;
+
+let locked = false;
+let xOffset = 0.0;
+let yOffset = 0.0;
+let board;
+let hexSize = 160;
 function preload() {
 
   font = loadFont('resources/Inconsolata-ExtraLight.ttf');
@@ -13,19 +18,14 @@ function preload() {
 function setup() {
   var canvasDiv = document.getElementById("sketchdiv");
   var cnv = createCanvas(width, height, WEBGL);
-  angleMode
+
   cnv.parent("sketchdiv");
   setAttributes('antialias', true);
   fill(237, 34, 93);
   strokeWeight(3);
   //textureMode(NORMAL);
 
-
-
-
-
-
-  board = new Board(0, 0, 160);
+  board = new Board(0, 0, hexSize);
   tiles.push(board.placeTile());
   tiles.push(board.placeTile("A"));
 
@@ -40,16 +40,57 @@ function setup() {
   tiles.push(board.placeTile("F"));
 }
 function draw() {
-  camera(0, width / 2, height / 2, 0, 0, 0, 0, 1, 0);
+
+  //todo: make drag and drop work with camera.
+  //camera(0, width, height, 0, 0, 0, 0, 1, 0);
 
   background(200);
+
+
   for (tile of tiles) {
     board.drawTile(tile.x, tile.y)
   }
-  // pan camera according to angle 'delta'
-  //cam.tilt(delta);
+  set = false;
+  for (tile of tiles) {
+    if (tile.mouseOverTile()) {
+      board.activeTile = tile;
+      set = true;
+      if (!locked) {
+        stroke(255);
+        fill(244, 122, 158);
+      }
+    } else{
+      stroke(156, 39, 176);
+      fill(244, 122, 158);
+        }
+  }
+  if (set == false) {
+    board.activeTile = null;
+  }
 
 
+}
+
+function mousePressed() {
+  if (board.activeTile != null) {
+    locked = true;
+    xOffset = mouseX - board.activeTile.x;
+    yOffset = mouseY - board.activeTile.y;
+  } else {
+    locked = false;
+  }
+}
+
+function mouseDragged() {
+  if (locked) {
+    board.activeTile.x = mouseX - xOffset;
+    board.activeTile.y = mouseY - yOffset;
+    board.activeTile.setVertices();
+
+  }
+}
+function mouseReleased() {
+  locked = false;
 }
 function range(stop) {
   var a = [0], b = 0;
@@ -57,10 +98,6 @@ function range(stop) {
     a.push(b += 1 || 1);
   }
   return a;
-}
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 class Board {
@@ -93,7 +130,6 @@ class Board {
       var tile = new Tile(x, y);
       this.activeTile.addAdjacency(edge, tile)
     }
-    //text(tile.id.substring(0,3), tile.x,tile.y)
     return tile;
   }
 
@@ -137,21 +173,21 @@ class Board {
     endShape(CLOSE)
     push()
     texture(img);
-    let s = this.hexSize/2
-    let apothem = Math.sqrt(3/2)*s
-    let d = s/2//Math.sqrt(Math.pow(s, 2) - Math.pow((Math.sqrt(3)*s)/2, 2))
-    
+    let s = this.hexSize / 2
+    let r = Math.sqrt(3 / 2) * s
+    let d = s / 2
+
     beginShape()
 
     //right middle
-    vertex(x + this.hexSize * sin(PI / 2), y + this.hexSize * cos(PI / 2), 10,2*s, apothem)
+    vertex(x + this.hexSize * sin(PI / 2), y + this.hexSize * cos(PI / 2), 10, 2 * s, r)
 
-    vertex(x + this.hexSize * sin(PI / 6), y + this.hexSize * cos(PI / 6), 10, s+ d,2*apothem)
-    vertex(x + this.hexSize * sin(11 * PI / 6), y + this.hexSize * cos(11 * PI / 6), 10, d, 2*apothem)
+    vertex(x + this.hexSize * sin(PI / 6), y + this.hexSize * cos(PI / 6), 10, s + d, 2 * r)
+    vertex(x + this.hexSize * sin(11 * PI / 6), y + this.hexSize * cos(11 * PI / 6), 10, d, 2 * r)
     //left middle
-    vertex(x + this.hexSize * sin(3 * PI / 2), y + this.hexSize * cos(3 * PI / 2), 10, 0, apothem)
+    vertex(x + this.hexSize * sin(3 * PI / 2), y + this.hexSize * cos(3 * PI / 2), 10, 0, r)
     vertex(x + this.hexSize * sin(7 * PI / 6), y + this.hexSize * cos(7 * PI / 6), 10, d, 0)
-    vertex(x + this.hexSize * sin(5 * PI / 6), y + this.hexSize * cos(5 * PI / 6), 10,d + s, 0)
+    vertex(x + this.hexSize * sin(5 * PI / 6), y + this.hexSize * cos(5 * PI / 6), 10, d + s, 0)
     endShape(CLOSE)
     pop()
     beginShape()
@@ -242,14 +278,42 @@ class Tile {
   d = null;
   e = null;
   f = null;
+  vertices = null;
   edges = null;
   constructor(x, y) {
     this.id = this.generateId();
     this.edges = [];
     this.x = x;
     this.y = y;
+    this.setVertices();
   }
 
+  setVertices() {
+    let x = this.x + width / 2;
+    let y =  this.y + height / 2;
+    let vertices = []
+    vertices.push([x + hexSize * sin(PI / 2), y + hexSize * cos(PI / 2)]);
+    vertices.push([x + hexSize * sin(PI / 6), y + hexSize * cos(PI / 6)]);
+    vertices.push([x + hexSize * sin(11 * PI / 6), y + hexSize * cos(11 * PI / 6)]);
+    vertices.push([x + hexSize * sin(3 * PI / 2), y + hexSize * cos(3 * PI / 2)]);
+    vertices.push([x + hexSize * sin(7 * PI / 6), y + hexSize * cos(7 * PI / 6)]);
+    vertices.push([x + hexSize * sin(5 * PI / 6), y + hexSize * cos(5 * PI / 6)]);
+    this.vertices = vertices;
+  }
+  mouseOverTile() {
+    var x = mouseX, y = mouseY;
+
+    var inside = false;
+    for (var i = 0, j = this.vertices.length - 1; i < this.vertices.length; j = i++) {
+      var xi = this.vertices[i][0], yi = this.vertices[i][1];
+      var xj = this.vertices[j][0], yj = this.vertices[j][1];
+
+      var intersect = ((yi > y) != (yj > y))
+        && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  }
   addAdjacency(edge, tile, isAdjacency = false) {
     switch (edge) {
       case "A":
