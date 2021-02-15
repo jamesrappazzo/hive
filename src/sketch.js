@@ -3,7 +3,10 @@ let width = 1000;
 let height = 1000;
 
 let font;
-
+var zoom = .75;
+var zMin = 0.5;
+var zMax = 1.00;
+var sensativity = 0.005;
 let xOffset = 0.0;
 let yOffset = 0.0;
 let board;
@@ -23,7 +26,7 @@ function setup() {
   fill(237, 34, 93);
   strokeWeight(3);
   //textureMode(NORMAL);
-
+  //perspective(PI / 3.0, width / height, 0.1, 500);
   board = new Board(0, 0, hexSize);
   board.placeTile();
   board.placeTile("A");
@@ -34,12 +37,13 @@ function setup() {
   board.placeTile("F");
 }
 function draw() {
+    scale(zoom);
 
-  //todo: make drag and drop work with camera.
-  //camera(0, width, height, 0, 0, 0, 0, 1, 0);
+  rotateX(1);
+
 
   background(200);
-
+  
 
   for (tile of board.tiles) {
     board.drawTile(tile.x, tile.y)
@@ -59,7 +63,12 @@ function draw() {
   }
 
 }
-
+function mouseWheel(event) {
+  zoom -= sensativity * event.delta;
+  zoom = constrain(zoom, zMin, zMax);
+  //uncomment to block page scrolling
+  return false;
+}
 function mousePressed() {
   if (board.activeTile != null) {
     board.activeTile.locked = true;
@@ -208,6 +217,7 @@ class Board {
   }
 
   drawTile(x, y) {
+
     beginShape()
     vertex(x + this.hexSize * sin(PI / 2), y + this.hexSize * cos(PI / 2), 0)
     vertex(x + this.hexSize * sin(PI / 6), y + this.hexSize * cos(PI / 6), 0)
