@@ -83,9 +83,11 @@ function mouseReleased() {
 
     let minTile = board.getNearestTileToActiveTile();
     let nearestEdge = board.getNearestEdgeBetweenTileAndActiveTile(minTile);
-    board.activeTile.x = nearestEdge[0];
-    board.activeTile.y = nearestEdge[1];
-    board.activeTile.setVertices();
+    if (board.nearestEdgeCloseEnough(nearestEdge)) {
+      board.activeTile.x = nearestEdge[0];
+      board.activeTile.y = nearestEdge[1];
+      board.activeTile.setVertices();
+    }
   }
 }
 function range(stop) {
@@ -128,6 +130,12 @@ class Board {
       }
     }
     return minTile;
+  }
+  nearestEdgeCloseEnough(coord) {
+    let a = this.activeTile.x - coord[0];
+    let b = this.activeTile.y - coord[1];
+    let c = Math.hypot(a, b);
+    return c < this.hexSize / 1.5;
   }
 
   placeTile(edge = null) {
