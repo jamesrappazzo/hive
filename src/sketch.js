@@ -4,7 +4,6 @@ let height = 1000;
 let tiles = [];
 let font;
 
-let locked = false;
 let xOffset = 0.0;
 let yOffset = 0.0;
 let board;
@@ -50,47 +49,48 @@ function draw() {
   for (tile of tiles) {
     board.drawTile(tile.x, tile.y)
   }
+
+  if(board.activeTile == null ||  !board.activeTile.locked){
   set = false;
   for (tile of tiles) {
     if (tile.mouseOverTile()) {
-      board.activeTile = tile;
-      set = true;
-      if (!locked) {
-        stroke(255);
-        fill(244, 122, 158);
-      }
-    } else{
-      stroke(156, 39, 176);
-      fill(244, 122, 158);
-        }
+    
+        board.activeTile = tile;
+        set = true;
+      
+    }
   }
-  if (set == false) {
+  if (!set) {
     board.activeTile = null;
   }
-
+  }
 
 }
 
 function mousePressed() {
   if (board.activeTile != null) {
-    locked = true;
+    board.activeTile.locked = true;
     xOffset = mouseX - board.activeTile.x;
     yOffset = mouseY - board.activeTile.y;
-  } else {
-    locked = false;
   }
 }
 
 function mouseDragged() {
-  if (locked) {
-    board.activeTile.x = mouseX - xOffset;
-    board.activeTile.y = mouseY - yOffset;
-    board.activeTile.setVertices();
+  if (board.activeTile != null) {
+    if (board.activeTile.locked) {
+      board.activeTile.x = mouseX - xOffset;
+      board.activeTile.y = mouseY - yOffset;
+      board.activeTile.setVertices();
 
+    }
   }
 }
 function mouseReleased() {
-  locked = false;
+  if (board.activeTile != null) {
+    board.activeTile.locked = false;
+  } else{
+    board.activeTile = null;
+  }
 }
 function range(stop) {
   var a = [0], b = 0;
@@ -278,6 +278,7 @@ class Tile {
   d = null;
   e = null;
   f = null;
+  locked = false;
   vertices = null;
   edges = null;
   constructor(x, y) {
@@ -290,7 +291,7 @@ class Tile {
 
   setVertices() {
     let x = this.x + width / 2;
-    let y =  this.y + height / 2;
+    let y = this.y + height / 2;
     let vertices = []
     vertices.push([x + hexSize * sin(PI / 2), y + hexSize * cos(PI / 2)]);
     vertices.push([x + hexSize * sin(PI / 6), y + hexSize * cos(PI / 6)]);
