@@ -1,7 +1,7 @@
 
 let width = 1000;
 let height = 1000;
-let tiles = [];
+
 let font;
 
 let xOffset = 0.0;
@@ -25,18 +25,13 @@ function setup() {
   //textureMode(NORMAL);
 
   board = new Board(0, 0, hexSize);
-  tiles.push(board.placeTile());
-  tiles.push(board.placeTile("A"));
-
-  tiles.push(board.placeTile("B"));
-
-  tiles.push(board.placeTile("C"));
-
-  tiles.push(board.placeTile("D"));
-
-  tiles.push(board.placeTile("E"));
-
-  tiles.push(board.placeTile("F"));
+  board.placeTile();
+  board.placeTile("A");
+  board.placeTile("B");
+  board.placeTile("C");
+  board.placeTile("D");
+  board.placeTile("E");
+  board.placeTile("F");
 }
 function draw() {
 
@@ -46,23 +41,21 @@ function draw() {
   background(200);
 
 
-  for (tile of tiles) {
+  for (tile of board.tiles) {
     board.drawTile(tile.x, tile.y)
   }
 
-  if(board.activeTile == null ||  !board.activeTile.locked){
-  set = false;
-  for (tile of tiles) {
-    if (tile.mouseOverTile()) {
-    
+  if (board.activeTile == null || !board.activeTile.locked) {
+    set = false;
+    for (tile of board.tiles) {
+      if (tile.mouseOverTile()) {
         board.activeTile = tile;
         set = true;
-      
+      }
     }
-  }
-  if (!set) {
-    board.activeTile = null;
-  }
+    if (!set) {
+      board.activeTile = null;
+    }
   }
 
 }
@@ -81,15 +74,18 @@ function mouseDragged() {
       board.activeTile.x = mouseX - xOffset;
       board.activeTile.y = mouseY - yOffset;
       board.activeTile.setVertices();
-
     }
   }
 }
 function mouseReleased() {
   if (board.activeTile != null) {
     board.activeTile.locked = false;
-  } else{
-    board.activeTile = null;
+
+    let minTile = board.getNearestTileToActiveTile();
+    let nearestEdge = board.getNearestEdgeBetweenTileAndActiveTile(minTile);
+    board.activeTile.x = nearestEdge[0];
+    board.activeTile.y = nearestEdge[1];
+    board.activeTile.setVertices();
   }
 }
 function range(stop) {
@@ -99,6 +95,8 @@ function range(stop) {
   }
   return a;
 }
+
+
 
 class Board {
   constructor(width, height, hexSize) {
@@ -111,11 +109,26 @@ class Board {
     this.sepY = Math.sqrt(3) / 2 * hexSize;
     this.gridX = (this.gridXPixels / this.sepX) + 1;
     this.gridY = (this.gridYPixels / this.sepY) + 1;
-
-    this.startTile = null;
     this.activeTile = null;
+    this.tiles = [];
   }
+  getNearestTileToActiveTile() {
+    let min = Number.MAX_SAFE_INTEGER;
+    let minTile = null;
+    for (tile of this.tiles) {
+      if (tile.id != this.activeTile.id) {
+        let a = this.activeTile.x - tile.x;
+        let b = this.activeTile.y - tile.y;
+        let c = Math.hypot(a, b);
 
+        if (c < min) {
+          min = c;
+          minTile = tile;
+        }
+      }
+    }
+    return minTile;
+  }
 
   placeTile(edge = null) {
     var tile;
@@ -126,18 +139,15 @@ class Board {
     } else if (this.isIllegalStartState(edge)) {
       throw new Error("Edge can only be null if startTile not set.")
     } else {
-      let [x, y] = this.getEdgeCoords(edge);
+      let [x, y] = this.getActiveTileEdgeCoords(edge);
       var tile = new Tile(x, y);
       this.activeTile.addAdjacency(edge, tile)
     }
+    this.tiles.push(tile);
     return tile;
   }
 
-  setActiveTile(x, y) {
-    this.activeTile = this.activeTile.find(x, y);
-  }
-
-  getEdgeCoords(edge) {
+  getActiveTileEdgeCoords(edge) {
     switch (edge) {
       case "A":
         return this.getACoords(this.activeTile.x, this.activeTile.y);
@@ -155,11 +165,38 @@ class Board {
         throw new Error("Invalid edge.");
     }
   }
+
+  getTileEdgeCoords(tile) {
+    return [
+      this.getACoords(tile.x, tile.y),
+      this.getBCoords(tile.x, tile.y),
+      this.getCCoords(tile.x, tile.y),
+      this.getDCoords(tile.x, tile.y),
+      this.getECoords(tile.x, tile.y),
+      this.getFCoords(tile.x, tile.y)];
+  }
+  getNearestEdgeBetweenTileAndActiveTile(tile) {
+    let coords = this.getTileEdgeCoords(tile);
+    let min = Number.MAX_SAFE_INTEGER;
+    let minEdge = null;
+
+    for (let coord of coords) {
+      let a = this.activeTile.x - coord[0];
+      let b = this.activeTile.y - coord[1];
+      let c = Math.hypot(a, b);
+
+      if (c < min) {
+        min = c;
+        minEdge = coord;
+      }
+    }
+    return minEdge;
+  }
   isFirstTile(edge) {
-    return edge == null && this.startTile == null;
+    return edge == null && this.tiles.length == 0;
   }
   isIllegalStartState(edge) {
-    return edge == null && this.startTile != null;
+    return edge == null && this.tiles.length != 0;
   }
 
   drawTile(x, y) {
